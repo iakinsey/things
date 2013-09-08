@@ -1,5 +1,6 @@
 """
 TODO synchronous behavior for non-actor calls.
+TODO This actor not this/that object
 """
 
 from greenlet import greenlet
@@ -14,7 +15,7 @@ from functools import partial
 # Configuration
 ###############################################################################
 
-
+GREENLET_ACTOR_ATTR = 'actor'
 DAEMON_THREADS = True
 
 
@@ -123,7 +124,6 @@ class Actor(object):
 
     def __init__(self, max_workers=4, subscribed_to=[], spawn_as=Thread):
         self.max_workers = max_workers
-        self.return_actores = {}
 
         # Add subscribers if listed
         for actor in subscribed_to:
@@ -186,7 +186,7 @@ class Actor(object):
                 switch_data = message
 
             # Enter the context's frame and retrieve a result.
-            self.__current_frame = context
+            #self.__current_frame = context
             result = context.switch(switch_data)
 
             # Determine if the microthread is waiting for a result
@@ -200,17 +200,18 @@ class Actor(object):
                 message = create_message(data, resume_context=current_context)
                 return_actor._put(message)
 
-            self.__current_frame = None
+            #self.__current_frame = None
 
     def _create_microthread(self, target):
         microthread = greenlet(target)
-        microthread.actor = self
+        # Add the current actor as an attribute to the greenlet
+        setattr(microthread, GREENLET_ACTOR_ATTR, self)
 
         return microthread
 
-    def call(self, actor, data):
+    def call(self, data):
         '''
-        Puts a message in another actor's mailbox with a corresponding return
+        Puts a message this actor's mailbox with a corresponding return
         actor and reference to the current microthread. The microthread is
         then switched off and execution returns to the event loop until a
         result comes back. Upon recieving the result, the microthread is
@@ -225,13 +226,21 @@ class Actor(object):
              non-actor calls.
         '''
 
-        message = create_message(data, return_actor=self,
-                                 current_context=self.__current_frame)
-        actor._put(message)
-        context_result = create_result(True, None)
-        result = self.__event_loop_context.switch(context_result)
+        context = greenlet.getcurrent()
 
-        return result
+        # Check if the current frame has an actor associated with it.
+        if getattr(context, GREENLET_ACTOR_ATTR, None):
+            # Behaviour for cross-actor calling
+            message = create_message(data, return_actor=context.actor,
+                                     current_context=context)
+            self._put(message)
+            context_result = create_result(True, None)
+            result = context.actor.__event_loop_context.switch(context_result)
+
+            return result
+        else:
+            # TODO Non-actor calling (bad)
+            pass
 
     def on_message(self, data):
         '''
@@ -292,13 +301,6 @@ class Actor(object):
         # TODO handle errors for this
         # TODO should this create a message or recieve raw data? Both perhaps?
         self._queue.put(message)
-
-    def send(self, actor, data):
-        '''
-        Put a message in a specified actor's mailbox.
-        '''
-
-        actor._put(create_message(data))
 
     @lazy_property
     def _queue(self):

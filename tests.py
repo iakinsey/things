@@ -53,7 +53,7 @@ class TestActorCommunication(unittest.TestCase):
 
         class FirstActor(things.Actor):
             def on_message(self, data):
-                self.send(data['actor'], data['message'])
+                data['actor'].put(data['message'])
 
         class SecondActor(things.Actor):
             def on_message(self, data):
@@ -74,15 +74,14 @@ class TestActorCommunication(unittest.TestCase):
 
     def test_call(self):
         '''
-        Pretty much a copy of self.test_send, except we use Actor.call instead
-        of Actor.send.
+        Pretty much a copy of self.test_send, except we use Actor.call.
         '''
 
         queue = Queue()
 
         class FirstActor(things.Actor):
             def on_message(self, data):
-                self.call(data['actor'], data['message'])
+                data['actor'].call(data['message'])
 
         class SecondActor(things.Actor):
             def on_message(self, data):
