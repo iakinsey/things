@@ -305,15 +305,40 @@ class Actor(object):
         return Queue()
 
 
-class BusHandler(object):
-    def __init__(self, parent):
+###############################################################################
+# Bus classes
+###############################################################################
+
+
+BUS_SUBSCRIBER = 0
+BUS_MESSAGE = 1
+
+
+def create_bus_message(handler, message):
+    return (handler, message)
+
+
+def subscriber(fn):
+    @lazy_property
+    def func(self):
+        return Subscriber(self, fn)
+
+    return func
+
+
+class Subscriber(object):
+    def __init__(self, parent, method):
+        # The bus actor associated with this method.
         self.parent = parent
+        self.method = method
 
     def put(self, data):
-        pass
+        self.parent.put(create_bus_message(self.method, data))
 
     def call(self, data):
-        pass
+        result = self.parent.call(create_bus_message(self.method, data))
+
+        return result
 
     def __lshift__(self, other):
         '''
@@ -322,18 +347,14 @@ class BusHandler(object):
 
         self.put(other)
 
-    def __ilshift__(self, other):
-        '''
-        Sugar syntax for call.
-        '''
-
-        pass
-
 
 class Bus(Actor):
     '''
     An actor which emulates bus behavior with its method names. Any method
     subclassed with Bus will handle recieving a message addressed to that name.
+
+    To add a subscriber, add the @subscriber decorator to a method in this
+    object.
 
     Put symantics
     -------------
@@ -346,23 +367,17 @@ class Bus(Actor):
     --------------
 
     Bus.<handler>.call(data)
-    Bus.<handler> <<= data
 
     Public methods
     --------------
-        on_invalid_call
 
-    TODO You need some way to get all methods
+    on_invalid_call
     '''
 
-    def on_message(self, data):
-        pass
+    def handle_message(self, message):
+        bus_data = message[MESSAGE_DATA]
+        subscriber = bus_data[BUS_SUBSCRIBER]
 
-    def publish(self, name, data):
-        pass
+        result = subscriber(self, bus_data[BUS_MESSAGE])
 
-    def on_invalid_call(self, data):
-        pass
-
-    def handle_message(self, data):
-        self.on_message(data)
+        return create_result(False, result)

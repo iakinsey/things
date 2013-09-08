@@ -44,7 +44,7 @@ class TestActorEventLoop(unittest.TestCase):
 
 
 class TestActorCommunication(unittest.TestCase):
-    def test_send(self):
+    def test_put(self):
         '''
         Send 1000 messages from one actor to another.
         '''
@@ -97,7 +97,7 @@ class TestActorCommunication(unittest.TestCase):
                 'message': n
             })
 
-            result = queue.get()
+            result = queue.get(timeout=5)
 
             assert result == n
 
@@ -183,11 +183,64 @@ class TestActorCommunication(unittest.TestCase):
                 assert result == data
 
 
-class TestActorSyntax(unittest.TestCase):
+class TestBus(unittest.TestCase):
     def test_put(self):
         '''
-        Send a message to an actor using the put sugar syntax (bitwise left
-        shift).
+        Send 1000 messages to a bus subscriber.
+        '''
+
+        queue = Queue()
+
+        class Bus(things.Bus):
+            @things.subscriber
+            def subscriber(self, data):
+                queue.put(data)
+
+        bus = Bus()
+
+        for n in range(1000):
+            bus.subscriber.put(n)
+            result = queue.get(timeout=5)
+
+            assert result == n
+
+    def test_call(self):
+        '''
+        Pretty much a copy of self.test_send, except we use Actor.call.
+        '''
+
+        queue = Queue()
+
+        class Bus(things.Bus):
+            @things.subscriber
+            def subscriber(self, data):
+                return data
+
+        class Actor(things.Actor):
+            def on_message(self, data):
+                bus = data['bus']
+                message = data['message']
+                result = bus.subscriber.call(message)
+                queue.put(result)
+
+        bus = Bus()
+        actor = Actor()
+
+        for n in range(1000):
+            actor.put({
+                'bus': bus,
+                'message': n
+            })
+
+            result = queue.get(timeout=5)
+
+            assert result == n
+
+
+class TestPutSyntax(unittest.TestCase):
+    def test_put(self):
+        '''
+        Send a message to an actor using the put sugar syntax.
         '''
 
         # use a queue
@@ -200,6 +253,25 @@ class TestActorSyntax(unittest.TestCase):
 
         actor = Actor()
         actor << message
+        result = queue.get(timeout=5)
+
+        assert result == message
+
+    def test_bus_put(self):
+        '''
+        Send a message to a bus using the put sugar syntax.
+        '''
+
+        queue = Queue()
+        message = "hello world"
+
+        class Bus(things.Bus):
+            @things.subscriber
+            def subscriber(self, data):
+                queue.put(data)
+
+        bus = Bus()
+        bus.subscriber << message
         result = queue.get(timeout=5)
 
         assert result == message
