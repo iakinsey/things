@@ -81,11 +81,12 @@ class TestActorCommunication(unittest.TestCase):
 
         class FirstActor(things.Actor):
             def on_message(self, data):
-                data['actor'].call(data['message'])
+                result = data['actor'].call(data['message'])
+                queue.put(result)
 
         class SecondActor(things.Actor):
             def on_message(self, data):
-                queue.put(data)
+                return data
 
         first_actor = FirstActor()
         second_actor = SecondActor()
@@ -96,7 +97,7 @@ class TestActorCommunication(unittest.TestCase):
                 'message': n
             })
 
-            result = queue.get(timeout=5)
+            result = queue.get()
 
             assert result == n
 
@@ -180,6 +181,28 @@ class TestActorCommunication(unittest.TestCase):
             for n in range(len(level_3)):
                 result = queue.get(timeout=5)
                 assert result == data
+
+
+class TestActorSyntax(unittest.TestCase):
+    def test_put(self):
+        '''
+        Send a message to an actor using the put sugar syntax (bitwise left
+        shift).
+        '''
+
+        # use a queue
+        queue = Queue()
+        message = "hello world"
+
+        class Actor(things.Actor):
+            def on_message(self, data):
+                queue.put(data)
+
+        actor = Actor()
+        actor << message
+        result = queue.get(timeout=5)
+
+        assert result == message
 
 
 if __name__ == '__main__':

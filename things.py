@@ -15,6 +15,7 @@ from functools import partial
 # Configuration
 ###############################################################################
 
+
 GREENLET_ACTOR_ATTR = 'actor'
 DAEMON_THREADS = True
 
@@ -137,15 +138,11 @@ class Actor(object):
         self.__main = spawn_as(target=self._event_loop)
         self.__main.start()
 
-    def __rshift__(self, data):
+    def __lshift__(self, data):
         self.put(data)
 
-    def __ilshift__(self, data):
-        '''
-        TODO use current greenlet.
-        '''
-
-        pass
+    def __and__(self, data):
+        self.call(data)
 
     def _event_loop(self):
         '''
@@ -186,7 +183,6 @@ class Actor(object):
                 switch_data = message
 
             # Enter the context's frame and retrieve a result.
-            #self.__current_frame = context
             result = context.switch(switch_data)
 
             # Determine if the microthread is waiting for a result
@@ -199,8 +195,6 @@ class Actor(object):
             if return_actor and current_context and not waiting:
                 message = create_message(data, resume_context=current_context)
                 return_actor._put(message)
-
-            #self.__current_frame = None
 
     def _create_microthread(self, target):
         microthread = greenlet(target)
@@ -227,15 +221,16 @@ class Actor(object):
         '''
 
         context = greenlet.getcurrent()
+        actor = getattr(context, GREENLET_ACTOR_ATTR, None)
 
         # Check if the current frame has an actor associated with it.
-        if getattr(context, GREENLET_ACTOR_ATTR, None):
+        if actor:
             # Behaviour for cross-actor calling
-            message = create_message(data, return_actor=context.actor,
+            message = create_message(data, return_actor=actor,
                                      current_context=context)
             self._put(message)
             context_result = create_result(True, None)
-            result = context.actor.__event_loop_context.switch(context_result)
+            result = actor.__event_loop_context.switch(context_result)
 
             return result
         else:
@@ -278,11 +273,10 @@ class Actor(object):
         '''
         Handles recieving a raw message and returning a response, this is
         called before on_message.
+
+        TODO Handle errors
         '''
-
         result = self.on_message(message[MESSAGE_DATA])
-
-        # TODO handle errors
         return create_result(False, result)
 
     def put(self, message):
