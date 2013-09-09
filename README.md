@@ -3,8 +3,7 @@
 
 ### Introduction
 
-Things.py is a actor framework that emphasizes readability, licened under the
-MIT License.
+Things.py is a actor framework that emphasizes readability.
 
 ### Setting up an environment
 Things requires greenlet and (optionally) nose.
