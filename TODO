@@ -11,3 +11,4 @@ Synchronous-looking calls for non-actors
 Passing subscribers to a bus
 Determine if actors should share an event loop
 Constructor
+Single method to construct actor
