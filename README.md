@@ -3,7 +3,7 @@
 
 ### Introduction
 
-Things.py is a actor framework that emphasizes readability.
+Things is an actor framework that emphasizes readability.
 
 ### Setting up an environment
 Things requires greenlet and (optionally) nose.
@@ -14,7 +14,8 @@ Things requires greenlet and (optionally) nose.
 
 #### Actor
 Setting up an actor is relatively simple. There is very little convention
-beyond the on_message method, which handles messages recieved from the mailbox.
+beyond the on_message() method, which handles messages received from the
+mailbox.
 
     from things import Actor
 
@@ -34,10 +35,10 @@ Alternatively, you can use the bitwise shift operator.
 
     actor << 10
 
-If you would like to recieve a return value from an actor, use the .call()
+If you would like to receive a return value from an actor, use the .call()
 method. This reads like synchronous code while being asynchronous under the
 hood. Using .call() will not block other operations while waiting for a result.
-This method does not currenty work when called outside of an actor.
+This method does not currently work when called outside of an actor.
 
     stuff = actor.call(10)
     print(stuff)
