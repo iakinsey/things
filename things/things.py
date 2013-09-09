@@ -123,7 +123,10 @@ class Actor(object):
         call
     '''
 
-    def __init__(self, subscribed_to=[], spawn_as=Thread):
+    def __init__(self, target=None, subscribed_to=[], spawn_as=Thread):
+        if callable(target):
+            self.on_message = target
+
         # Add subscribers if listed
         for actor in subscribed_to:
             self.listen(actor)
