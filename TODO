@@ -1,5 +1,7 @@
--Transactional/Persistent Objects
--Garbage Collection
--find a way to handle addresses
--Write an async test class, so we dont have to use queueing all the time
--Interface for multiple actors
+Transactional Objects
+Persistent Objects
+Garbage Collection
+Addresses
+Async tests
+Composite Actors
+Context switching across threads
