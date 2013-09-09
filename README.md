@@ -7,7 +7,7 @@ Things.py is a actor framework that emphasizes readability, licened under the
 MIT License.
 
 ### Setting up an environment
-Things requires greenlet and (optonally) nose.
+Things requires greenlet and (optionally) nose.
 
     pip install -r requirements.txt
 
