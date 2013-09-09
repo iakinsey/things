@@ -125,7 +125,7 @@ class Actor(object):
 
     def __init__(self, target=None, subscribed_to=[], spawn_as=Thread):
         if callable(target):
-            self.on_message = partial(target, self)
+            self.on_message = lambda s, *a, **k: target(*a, **k)
 
         # Add subscribers if listed
         for actor in subscribed_to:
