@@ -136,9 +136,6 @@ class Actor(object):
     def __lshift__(self, data):
         self.put(data)
 
-    def __and__(self, data):
-        self.call(data)
-
     def _event_loop(self):
         '''
         Starts the event loop method as a greenlet.
