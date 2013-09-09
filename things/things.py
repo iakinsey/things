@@ -123,18 +123,13 @@ class Actor(object):
         call
     '''
 
-    def __init__(self, max_workers=4, subscribed_to=[], spawn_as=Thread):
-        self.max_workers = max_workers
-
+    def __init__(self, subscribed_to=[], spawn_as=Thread):
         # Add subscribers if listed
         for actor in subscribed_to:
             self.listen(actor)
 
         # A list of actors subscribed to this actor.
-        # TODO Use bisect to turn subscribers into binary search trees?
         self.subscribers = []
-        # TODO use an executor instead.
-        # TODO create a load balancing queue instead.
         self.__main = spawn_as(target=self._event_loop)
         self.__main.start()
 

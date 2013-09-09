@@ -8,3 +8,4 @@ Context switching across threads
 Javascript implementation
 Sphinx documentation
 Synchronous-looking calls for non-actors
+Passing subscribers to a bus

@@ -20,9 +20,7 @@ beyond the on_message method, which handles messages recieved from the mailbox.
 
     class Thingy(Actor):
         def on_message(self, data):
-            result = do_stuff()
-
-            return result
+            return data
 
 Instantiating the actor is like any other object.
 
@@ -43,6 +41,17 @@ This method does not currenty work when called outside of an actor.
 
     stuff = actor.call(10)
     print(stuff)
+
+Actors can also subscribe to other actors. When this happens, anything sent
+through the broadcast() method is put into the subject's mailbox.
+
+    class AnotherThingy(Actor):
+        pass
+
+    another_actor = AnotherThingy()
+    another_actor.subscribe(actor)
+    another_actor.broadcast(10)
+    >> 10
 
 #### Bus
 A bus is an actor with subscribers. Use the @subscriber decorator to indicate
