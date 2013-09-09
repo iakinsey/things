@@ -5,3 +5,6 @@ Addresses
 Async tests
 Composite Actors
 Context switching across threads
+Javascript implementation
+Sphinx documentation
+Synchronous-looking calls for non-actors
